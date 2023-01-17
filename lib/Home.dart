@@ -1,3 +1,4 @@
+import 'package:consumo_servico_avancado/Post.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -10,44 +11,75 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  Future<Map> _recuperarPreco() async {
-    String url = "https://blockchain.info/ticker";
-    http.Response response = await http.get(url);
-    return json.decode( response.body );
+  String _urlBase = "https://jsonplaceholder.typicode.com";
+
+  Future<List<Post>> _recuperarPostagens() async {
+    
+    http.Response response = await http.get( _urlBase + "/posts" );
+    var dadosJson = json.decode( response.body );
+    
+    List<Post> postagens = [];
+    for( var post in dadosJson ){
+      
+      print("post: " + post["title"] );
+      Post p = Post(post["userId"], post["id"], post["title"], post["body"]);
+      postagens.add( p );
+    
+    }
+    return postagens;
+    //print( postagens.toString() );
+    
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map>(
-      future: _recuperarPreco(),
-      builder: (context, snapshot){
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Consumo de serviço avançado"),
+      ),
+      body: FutureBuilder<List<Post>>(
+        future: _recuperarPostagens(),
+        builder: (context, snapshot) {
 
-        String resultado;
-        switch( snapshot.connectionState ){
-          case ConnectionState.none :
-          case ConnectionState.waiting :
-            print("conexao waiting");
-            resultado = "Carregando...";
-            break;
-          case ConnectionState.active :
-          case ConnectionState.done :
-            print("conexao done");
-            if( snapshot.hasError ){
-              resultado = "Erro ao carregar os dados.";
-            }else {
+          switch( snapshot.connectionState ){
+            case ConnectionState.none :
+            case ConnectionState.waiting :
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            case ConnectionState.active :
+            case ConnectionState.done :
+              if( snapshot.hasError ){
+                print("lista: Erro ao carregar ");
+                return Container();
+              }else {
 
-              double valor = snapshot.data?["BRL"]["buy"];
-              resultado = "Preço do bitcoin: ${valor.toString()} ";
+                print("lista: carregou!! ");
+                return ListView.builder(
+                  itemCount: snapshot.data?.length,
+                    itemBuilder: (context, index){
 
-            }
-            break;
-        }
+                      List<Post>? lista = snapshot.data;
+                      if (lista == null)  return ListTile(
+                        title: Text( "" ),
+                        subtitle: Text( "" ),
+                      );
+                      Post post = lista[index];
 
-        return Center(
-          child: Text( resultado ),
-        );
+                      return ListTile(
+                        title: Text( post.title ),
+                        subtitle: Text( post.id.toString() ),
+                      );
+                    
+                    }
+                );
 
-      },
+              }
+              break;
+          }
+
+        },
+      ),
     );
   }
 }
