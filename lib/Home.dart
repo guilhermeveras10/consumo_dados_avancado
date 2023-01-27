@@ -27,12 +27,9 @@ class _HomeState extends State<Home> {
   }
 
   _post() async {
-    var corpo = json.encode({
-      "userId": 120,
-      "id": null,
-      "title": "Titulo",
-      "body": "Corpo da postagem"
-    });
+    Post post = Post(120, 1, "Titulo", "Corpo da postagem");
+
+    var corpo = json.encode(post.toJson());
 
     http.Response response = await http.post(_urlBase + "/posts",
         headers: {"Content-type": "application/json; charset=UTF-8"},
@@ -42,11 +39,38 @@ class _HomeState extends State<Home> {
     print("resposta: ${response.body}");
   }
 
-  _put() {}
+  _put() async {
+    Post post = new Post(120, 1, "Titulo", "Corpo da postagem");
 
-  _patch() {}
+    var corpo = json.encode(post.toJson());
 
-  _delete() {}
+    http.Response response = await http.put(_urlBase + "/posts/2",
+        headers: {"Content-type": "application/json; charset=UTF-8"},
+        body: corpo);
+
+    print("resposta: ${response.statusCode}");
+    print("resposta: ${response.body}");
+  }
+
+  _patch() async {
+    Post post = new Post(120, 1, "Titulo", "Corpo da postagem");
+
+    var corpo = json.encode(post.toJson());
+
+    http.Response response = await http.patch(_urlBase + "/posts/2",
+        headers: {"Content-type": "application/json; charset=UTF-8"},
+        body: corpo);
+
+    print("resposta: ${response.statusCode}");
+    print("resposta: ${response.body}");
+  }
+
+  _delete() async {
+    http.Response response = await http.delete(_urlBase + "/posts/2");
+
+    print("resposta: ${response.statusCode}");
+    print("resposta: ${response.body}");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +90,11 @@ class _HomeState extends State<Home> {
                 ),
                 ElevatedButton(
                   child: Text("Atualizar"),
-                  onPressed: _post,
+                  onPressed: _patch,
                 ),
                 ElevatedButton(
                   child: Text("Remover"),
-                  onPressed: _post,
+                  onPressed: _delete,
                 ),
               ],
             ),
@@ -95,7 +119,6 @@ class _HomeState extends State<Home> {
                             itemCount: snapshot.data?.length,
                             itemBuilder: (context, index) {
                               List<Post>? lista = snapshot.data;
-
                               if (lista == null)
                                 return ListTile(
                                   title: Text(""),
